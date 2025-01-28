@@ -15,8 +15,9 @@ export default function UploadPage() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
 
-  const handleUpload = async (file: File) => {
-    router.push('/gallery');
+  const handleUpload = (url: string) => {
+    setUploadedImageUrl(url);
+    toast.success('Image uploaded successfully!');
   };
 
   return (
