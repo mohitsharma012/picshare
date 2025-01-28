@@ -4,7 +4,7 @@ import { getApps } from 'firebase-admin/app'; // You don't need to re-import ini
 
 const serviceAccountKey = {
     projectId: process.env.FIREBASE_PROJECT_ID,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),  // Handle newlines
+    privateKey: process.env.FIREBASE_PRIVATE_KEY,  // Handle newlines
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
   };
 
