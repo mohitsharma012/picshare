@@ -71,6 +71,10 @@ export async function POST(request: NextRequest) {
       region: process.env.AWS_REGION
     });
 
+    if (!process.env.AWS_BUCKET_NAME) {
+      throw new Error('AWS_BUCKET_NAME is not defined');
+    }
+
     const params = {
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: `${decodedToken.email}/${filename}`,
