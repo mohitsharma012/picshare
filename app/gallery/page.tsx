@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 interface UploadedImage {
   url: string;
   timestamp: number;
+  filename: string;
 }
 
 export default function GalleryPage() {
