@@ -4,21 +4,20 @@ import { readdir } from 'fs/promises';
 import { join } from 'path';
 import { cookies } from 'next/headers';
 import { getAuth } from 'firebase-admin/auth';
-
 import firebaseAdminConnection from '@/lib/firebase-admin';
+import { db } from '@/lib/mongodb';
+import Images from '@/models/images';
 
+// Initialize MongoDB connection
+db();
 
 // Initialize Firebase Admin
-
-
 firebaseAdminConnection();
 
 // Sanitize email for use as directory name
 const sanitizeEmail = (email: string) => {
   return email.replace(/[^a-zA-Z0-9@._-]/g, '_');
 };
-
-
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,18 +46,23 @@ export async function GET(request: NextRequest) {
     const userDir = join(process.cwd(), 'public/uploads', sanitizedEmail);
 
     try {
-      const files = await readdir(userDir);
+      // const files = await readdir(userDir);
+      const files = await Images.find({ email: sanitizedEmail });
 
-      // Filter image files and create URLs
-      const images = files
-        .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
-        .map(file => ({
-          url: `/uploads/${sanitizedEmail}/${file}`,
-          timestamp: parseInt(file.split('-')[0])
-        }))
-        .sort((a, b) => b.timestamp - a.timestamp);
+      // Generate signed URLs for each image
+      const signedUrls = await Promise.all(
+        files.map(async (file: { image_name: string }) => {
+          try {
+            const signedUrl = `${process.env.URL}/api/images/${sanitizedEmail}/${file.image_name}`;
+            return { filename: file.image_name, url: signedUrl };
+          } catch (error) {
+            console.error("Error generating signed URL:", error);
+            return null;
+          }
+        })
+      );
 
-      return NextResponse.json({ images });
+      return NextResponse.json({ images: signedUrls.filter(Boolean) });
     } catch (error) {
       // If directory doesn't exist or can't be read, return empty array
       return NextResponse.json({ images: [] });

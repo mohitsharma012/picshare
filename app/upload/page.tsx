@@ -59,9 +59,20 @@ export default function UploadPage() {
             </div>
             <div className="mt-4 bg-white rounded-md p-4 border border-green-100">
               <p className="text-sm font-medium text-gray-700">Image URL:</p>
-              <code className="block mt-2 p-2 bg-gray-50 rounded text-sm overflow-x-auto">
-                {uploadedImageUrl}
-              </code>
+              <div className="flex items-center">
+                <code className="block mt-2 p-2 bg-gray-50 rounded text-sm overflow-x-auto flex-grow">
+                  {uploadedImageUrl}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(uploadedImageUrl);
+                    toast.success('Copied to clipboard!');
+                  }}
+                  className="ml-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Copy
+                </button>
+                </code>
+              </div>
             </div>
             <div className="mt-6 text-center">
               <Link href="/gallery">

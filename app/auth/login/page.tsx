@@ -35,10 +35,7 @@ export default function LoginPage() {
       
       // Store token in both localStorage and cookies
       localStorage.setItem('authToken', token);
-      // setCookie('authToken', token, {
-      //   maxAge: 30 * 24 * 60 * 60, // 30 days
-      //   path: '/',
-      // });
+    
       
       router.push('/');
     } catch (error: any) {

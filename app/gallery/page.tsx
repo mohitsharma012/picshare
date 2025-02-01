@@ -58,10 +58,10 @@ export default function GalleryPage() {
   }, [user, authLoading, router]);
 
 
-  const deleteImage = async (url: string, index: number) => {
+  const deleteImage = async (url: string, index: number, image_name: string) => {
     try {
       setDeletingIndex(index);
-      const response = await fetch(`/api/delete?path=${encodeURIComponent(url)}`, {
+      const response = await fetch(`/api/delete?image_name=${image_name}`, {
         method: 'DELETE',
         headers: {
           'token': localStorage.getItem('authToken') || ''
@@ -86,7 +86,7 @@ export default function GalleryPage() {
 
   const copyToClipboard = async (url: string, index: number) => {
     try {
-      const fullUrl = window.location.origin + url;
+      const fullUrl =  url;
       await navigator.clipboard.writeText(fullUrl);
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
@@ -147,12 +147,13 @@ export default function GalleryPage() {
               </Button>
             </div>
           ) : images.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {images.map((image, index) => (
                 <div
-                  key={image.timestamp}
-                  className="group relative bg-white rounded-lg shadow-sm overflow-hidden transition-transform hover:shadow-md hover:-translate-y-1"
+                key={image.timestamp}
+                className="group relative bg-white rounded-lg shadow-sm overflow-hidden transition-transform hover:shadow-md hover:-translate-y-1"
                 >
+                  
                   <div className="aspect-square relative">
                     <Image
                       src={image.url}
@@ -185,7 +186,7 @@ export default function GalleryPage() {
                       )}
                     </Button>
                     <Button
-                      onClick={() => deleteImage(image.url, index)}
+                      onClick={() => deleteImage(image.url, index, image.filename)}
                       disabled={deletingIndex === index}
                       className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 flex items-center gap-2"
                     >

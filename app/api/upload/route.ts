@@ -3,12 +3,14 @@ import type { NextRequest } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { auth } from '@/lib/firebase';
+import AWS from 'aws-sdk';
 import { getAuth } from 'firebase-admin/auth';
-
-
 import firebaseAdminConnection from '@/lib/firebase-admin';
+import Images from '@/models/images';
+import { db } from '@/lib/mongodb';
 
-
+// Initialize MongoDB connection
+db();
 // Initialize Firebase Admin
 firebaseAdminConnection();
 
@@ -16,18 +18,6 @@ firebaseAdminConnection();
 // Sanitize email for use as directory name
 const sanitizeEmail = (email: string) => {
   return email.replace(/[^a-zA-Z0-9@._-]/g, '_');
-};
-
-// Ensure user's uploads directory exists
-const ensureUserUploadsDir = async (email: string) => {
-  const sanitizedEmail = sanitizeEmail(email);
-  const userDir = join(process.cwd(), 'public/uploads', sanitizedEmail);
-  try {
-    await mkdir(userDir, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-  return userDir;
 };
 
 export async function POST(request: NextRequest) {
@@ -73,17 +63,32 @@ export async function POST(request: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = Date.now() + '-' + file.name.replaceAll(' ', '_');
-    
-    // Save file to user's directory using email
-    const userDir = await ensureUserUploadsDir(decodedToken.email);
-    const filePath = join(userDir, filename);
-    
-    // Write file
-    await writeFile(filePath, buffer);
 
-    // Return the public URL
-    const sanitizedEmail = sanitizeEmail(decodedToken.email);
-    const url = `/uploads/${sanitizedEmail}/${filename}`;
+    // UPload file to aws s3 bucket in user email directory
+    const s3 = new AWS.S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION
+    });
+
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: `${decodedToken.email}/${filename}`,
+      Body: buffer,
+      ContentType: file.type
+    };
+
+    await s3.upload(params).promise();
+
+    // Save image to database
+    const image = new Images({
+      email: decodedToken.email,
+      image_name:filename
+    });
+
+    await image.save();
+
+    const url = `${process.env.URL}/api/images/${decodedToken.email}/${filename}`;
     
     return NextResponse.json({ 
       url,
