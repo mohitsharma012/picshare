@@ -35,6 +35,9 @@ export default function LoginPage() {
       
       // Store token in both localStorage and cookies
       localStorage.setItem('authToken', token);
+
+      // reload the page to get the new token
+      window.location.reload();
     
       
       router.push('/');
